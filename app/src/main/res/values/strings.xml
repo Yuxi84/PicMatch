@@ -1,0 +1,9 @@
+<resources>
+    <string name="app_name">Pic Matching</string>
+
+    <string name="step_count">Step Count: 0</string>
+    <string name="restart_msg">Congratulations!! Play again?</string>
+    <string name="restart_yes">ヽ(＾Д＾)ﾉ Yes!</string>
+    <string name="restart_no">(Φ ₒ Φ) No Thanks</string>
+    <string name="step_count_update">"Step Count: "</string>
+</resources>
