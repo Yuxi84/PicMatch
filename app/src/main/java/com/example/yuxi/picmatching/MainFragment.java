@@ -29,8 +29,9 @@ public class MainFragment extends Fragment {
     private final static int ImageNumberNeed = 8;
     private final static int TOTALCARDNUM = 16;
     private static ArrayList<Integer> TotalImages;
-    private ArrayList<Integer> pickedImages;
+    private ArrayList<Integer> pickedImages;//arrayList of resource Id for picked images
     private int[] cards = new int[TOTALCARDNUM];
+    private ArrayList<Integer> cardsBefore;//keep track of images displayed before orientation change
 
     private SoundPool mySoundPool;
     private int mySoundMatch, mySoundMisMatch;
@@ -40,6 +41,7 @@ public class MainFragment extends Fragment {
 
     private ImageButton firstCard; //in click event remember first card
     private int firstCardImgPos;//remember first card[i]
+    private  int firstCardPos;//remember position of firstCard in cards
     private int matchedCardsNum;
 
     private Handler hideHandler = null;
@@ -66,7 +68,8 @@ public class MainFragment extends Fragment {
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
         View rootView = inflater.inflate(R.layout.fragment_main, container, false);
-        initView(rootView);
+        boolean IsRestart = (savedInstanceState == null)?true:false;
+        initView(rootView, IsRestart);
         return rootView;
     }
 
@@ -76,11 +79,18 @@ public class MainFragment extends Fragment {
         pickImages();
     }
 
-    private void initView(View rootView){
-        stepCount = 0;
-        matchedCardsNum = 0;
+    private void initView(View rootView, boolean isRestart){
+        //TODO changed
+        if (isRestart == true){
+            //initialize instance values
+            stepCount = 0;
+            matchedCardsNum = 0;
+            //create ArrayList cardsBefore
+            cardsBefore = new ArrayList<Integer>();
+        }
+
         final TextView stepView = (TextView) rootView.findViewById(R.id.steps);
-        stepView.setText(R.string.step_count); //initialize stepView
+        stepView.setText(getString(R.string.step_count_update) + stepCount); //initialize stepView
 
 
         Resources res = getResources();
@@ -90,9 +100,13 @@ public class MainFragment extends Fragment {
                     "card" + i, "id", getActivity().getPackageName());
 
             final ImageButton ib = (ImageButton) rootView.findViewById(id);
-            //TODO block ui? initialize ib
-            if (ib.getDrawable() != null){
+            //TODO block ui? initialize ib; changed
+            if (isRestart == true){//erase images from the last round game
                 ib.setImageDrawable(null);
+            }else {//need to restore image after orientation change
+                if (cardsBefore.indexOf(new Integer(i)) > -1) {//if this card was displayed before
+                    ib.setImageResource(pickedImages.get(cards[i]));
+                }
             }
             ib.setOnClickListener(new View.OnClickListener() {
                 @Override
@@ -124,8 +138,11 @@ public class MainFragment extends Fragment {
                         if (stepCount%2 != 0){//first click
                             firstCard = ib;
                             firstCardImgPos = imagePos;
+                            firstCardPos = tmp_i;
                         }else{// if second, check card[i] match (yes, see notes, no, hide( postdelaysetbackground resource to 0))
                             if (firstCardImgPos == imagePos){//cards match
+                                cardsBefore.add(firstCardPos);
+                                cardsBefore.add(tmp_i);//save cards to be display in case of orientation change
                                 matchedCardsNum +=2;
                                 mySoundPool.play(mySoundMatch, myVolume, myVolume, 1, 0, 1f);
                                 if (matchedCardsNum == TOTALCARDNUM){
@@ -243,7 +260,7 @@ public class MainFragment extends Fragment {
     private void restartGame() {
         //TODO:
         initGame();
-        initView(getView());
+        initView(getView(), true);
     }
 
     @Override
